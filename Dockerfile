@@ -6,16 +6,14 @@ WORKDIR /app
 
 COPY ./requirements.txt /app/requirements.txt
 
-RUN apt-get update
+RUN apt-get update && \
+    apt-get install -y ffmpeg libsm6 libxext6
 
-RUN apt-get install ffmpeg libsm6 libxext6  -y
-
-RUN pip install --no-cache-dir -U install pip
-
-RUN pip install --no-cache-dir install -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
 
-RUN /bin/sh setup.sh
+RUN chmod +x setup.sh && /bin/sh setup.sh
 
-ENTRYPOINT ["streamlit", "run", "Demo.py"]
+ENTRYPOINT ["streamlit", "run", "🏠️_Demo.py", "--server.port=8080", "--server.headless=true"]
