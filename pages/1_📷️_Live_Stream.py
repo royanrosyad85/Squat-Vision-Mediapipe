@@ -15,7 +15,9 @@ from process_frame import ProcessFrame
 from thresholds import get_thresholds_beginner, get_thresholds_pro
 
 
-st.title('AI Fitness Trainer: Squats Analysis')
+st.title('Live Fitness Vision : V-Squat Analysis')
+st.subheader('Real-time Pose Estimation and Feedback')
+
 
 # Set dark theme styling
 st.markdown("""

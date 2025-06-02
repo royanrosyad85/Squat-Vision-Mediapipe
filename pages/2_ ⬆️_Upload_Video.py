@@ -1,4 +1,3 @@
-import av
 import os
 import sys
 import streamlit as st
@@ -17,7 +16,7 @@ from thresholds import get_thresholds_beginner, get_thresholds_pro
 
 
 
-st.title('AI Fitness Trainer: Squats Analysis')
+st.title('Fitness Vision: V-Squat Analysis')
 
 col1, col2 = st.columns(2)
 with col1:

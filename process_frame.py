@@ -110,10 +110,10 @@ class ProcessFrame:
         }
         
         self.FEEDBACK_ID_MAP = {
-                                0: ('BEND BACKWARDS', 215, (0, 153, 255)),
-                                1: ('BEND FORWARD', 215, (0, 153, 255)),
-                                2: ('KNEE FALLING OVER TOE', 170, (255, 80, 80)),
-                                3: ('SQUAT TOO DEEP', 125, (255, 80, 80))
+                                0: ('BADAN TERLALU KE BELAKANG', 215, (0, 153, 255)),
+                                1: ('BADAN TERLALU KE DEPAN', 215, (0, 153, 255)),
+                                2: ('LUTUT MELEWATI JARI KAKI', 170, (255, 80, 80)),
+                                3: ('SQUAT TERLALU DALAM', 125, (255, 80, 80))
                                }
 
         

@@ -32,8 +32,6 @@ def draw_rounded_rect(img, rect_start, rect_end, corner_width, box_color):
     return img
 
 
-
-
 def draw_dotted_line(frame, lm_coord, start, end, line_color):
     pix_step = 0
 
@@ -81,8 +79,6 @@ def draw_text(
     return text_size
 
 
-
-
 def find_angle(p1, p2, ref_pt = np.array([0,0])):
     p1_ref = p1 - ref_pt
     p2_ref = p2 - ref_pt
@@ -95,17 +91,12 @@ def find_angle(p1, p2, ref_pt = np.array([0,0])):
     return int(degree)
 
 
-
-
-
 def get_landmark_array(pose_landmark, key, frame_width, frame_height):
 
     denorm_x = int(pose_landmark[key].x * frame_width)
     denorm_y = int(pose_landmark[key].y * frame_height)
 
     return np.array([denorm_x, denorm_y])
-
-
 
 
 def get_landmark_features(kp_results, dict_features, feature, frame_width, frame_height):
