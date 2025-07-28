@@ -189,13 +189,13 @@ st.header("Interpreting MPJPE Values")
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric("Excellent", "< 20 pixels", "High accuracy")
+    st.metric("Excellent", "< 10 pixels", "High accuracy")
     st.markdown("Indicates excellent pose estimation with minimal error.")
 with col2:
-    st.metric("Good", "20-50 pixels", "Acceptable")
+    st.metric("Good", "10-25 pixels", "Acceptable")
     st.markdown("Suitable for most applications with reasonable accuracy.")
 with col3:
-    st.metric("Needs Improvement", "> 50 pixels", "Higher error")
+    st.metric("Needs Improvement", "> 25 pixels", "Poor")
     st.markdown("May need calibration or better visibility conditions.")
 
 # Add interactive noise level slider for testing

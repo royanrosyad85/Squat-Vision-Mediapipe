@@ -55,17 +55,13 @@ upload_process_frame = ProcessFrame(thresholds=thresholds, evaluate_mpjpe=enable
 # Initialize face mesh solution
 pose = get_mediapipe_pose()
 
-
-download = None
-
-if 'download' not in st.session_state:
-    st.session_state['download'] = False
-
-
-output_video_file = f'output_recorded.mp4'
-
-if os.path.exists(output_video_file):
-    os.remove(output_video_file)
+# Initialize session state variables
+if 'processed_frames' not in st.session_state:
+    st.session_state['processed_frames'] = []
+if 'video_metadata' not in st.session_state:
+    st.session_state['video_metadata'] = None
+if 'show_download' not in st.session_state:
+    st.session_state['show_download'] = False
 
 
 with st.form('Upload', clear_on_submit=True):
@@ -79,31 +75,39 @@ warning_str = '<p style="font-family:Helvetica; font-weight: bold; color: Red; f
 
 warn = st.empty()
 
-
-download_button = st.empty()
+# Placeholder for download button (will be shown after processing)
+download_section = st.empty()
 
 if up_file and uploaded:
+    # Clear previous session data
+    st.session_state['processed_frames'] = []
+    st.session_state['video_metadata'] = None
+    st.session_state['show_download'] = False
     
-    download_button.empty()
     tfile = tempfile.NamedTemporaryFile(delete=False)
 
     try:
         warn.empty()
         tfile.write(up_file.read())
 
+        # Store video metadata for potential download
+        input_filename = up_file.name
+        filename_without_ext = os.path.splitext(input_filename)[0]
+        
         vf = cv2.VideoCapture(tfile.name)
 
-        # ---------------------  Write the processed video frame. --------------------
+        # Get video properties for metadata
         fps = int(vf.get(cv2.CAP_PROP_FPS))
         width = int(vf.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(vf.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        frame_size = (width, height)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video_output = cv2.VideoWriter(output_video_file, fourcc, fps, frame_size)
-        # -----------------------------------------------------------------------------
-
         
-        txt = st.sidebar.markdown(ip_vid_str, unsafe_allow_html=True)   
+        # Store metadata for potential video creation
+        st.session_state['video_metadata'] = {
+            'fps': fps,
+            'width': width,
+            'height': height,
+            'filename': f'Result_{filename_without_ext}.mp4'
+        }
         ip_video = st.sidebar.video(tfile.name) 
 
         while vf.isOpened():
@@ -115,11 +119,15 @@ if up_file and uploaded:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             out_frame, _ = upload_process_frame.process(frame, pose)
             stframe.image(out_frame)
-            video_output.write(out_frame[...,::-1])
+            
+            # Store processed frame in session state for potential download
+            st.session_state['processed_frames'].append(out_frame.copy())
 
         
         vf.release()
-        video_output.release()
+        
+        # Enable download option after processing is complete
+        st.session_state['show_download'] = True
         
         # Show MPJPE statistics if evaluation was enabled
         if enable_mpjpe and upload_process_frame.mpjpe_values:
@@ -165,30 +173,71 @@ if up_file and uploaded:
                 }
             </style>
             """, unsafe_allow_html=True)
-            
+        
         stframe.empty()
         ip_video.empty()
-        txt.empty()
         tfile.close()
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+
+# Show download button if processing is complete
+if st.session_state['show_download'] and st.session_state['processed_frames'] and st.session_state['video_metadata']:
     
-    except AttributeError:
-        warn.markdown(warning_str, unsafe_allow_html=True)   
-
-
-
-if os.path.exists(output_video_file):
-    with open(output_video_file, 'rb') as op_vid:
-        download = download_button.download_button('Download Video', data = op_vid, file_name='output_recorded.mp4')
+    def create_video_buffer():
+        """Create video file in memory buffer for direct download"""
+        metadata = st.session_state['video_metadata']
+        
+        # Create temporary file in memory
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as temp_file:
+            temp_filename = temp_file.name
+        
+        # Create video writer
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        video_writer = cv2.VideoWriter(
+            temp_filename, 
+            fourcc, 
+            metadata['fps'], 
+            (metadata['width'], metadata['height'])
+        )
+        
+        # Write all frames to video
+        for frame in st.session_state['processed_frames']:
+            # Convert RGB back to BGR for video writing
+            bgr_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            video_writer.write(bgr_frame)
+        
+        video_writer.release()
+        
+        # Read video file as bytes for download
+        with open(temp_filename, 'rb') as file:
+            video_bytes = file.read()
+        
+        # Clean up temporary file
+        os.unlink(temp_filename)
+        
+        return video_bytes
     
-    if download:
-        st.session_state['download'] = True
-
-
-
-if os.path.exists(output_video_file) and st.session_state['download']:
-    os.remove(output_video_file)
-    st.session_state['download'] = False
-    download_button.empty()
+    download_section.markdown("### Download Processed Video")
+    download_section.markdown("✅ **Video analysis complete!** You can now download the processed video.")
+    
+    # Prepare video data and show download button directly
+    with st.spinner("Preparing video for download..."):
+        try:
+            video_data = create_video_buffer()
+            
+            # Show download button directly
+            download_section.download_button(
+                label="⬇️ Download Processed Video",
+                data=video_data,
+                file_name=st.session_state['video_metadata']['filename'],
+                mime='video/mp4',
+                key="download_video",
+                use_container_width=True
+            )
+            
+        except Exception as e:
+            st.error(f"❌ Error preparing video: {str(e)}")
+            st.error("Please try processing the video again.")
 
 
     
